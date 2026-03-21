@@ -1,0 +1,1313 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulador de Lucro por Doce</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F2F7F5;
+    --bg-dark: #E0EDEA;
+    --verde: #1B6B5A;
+    --verde-light: #2E8B72;
+    --verde-suave: #D6EDE8;
+    --verde-ultra: #EAF5F2;
+    --texto: #0D2B24;
+    --texto-mid: #3A5E55;
+    --vermelho: #B71C1C;
+    --vermelho-light: #FFCDD2;
+    --sombra: 0 4px 24px rgba(13,43,36,0.08);
+    --sombra-forte: 0 12px 48px rgba(13,43,36,0.14);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--texto);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(circle at 15% 15%, rgba(27,107,90,0.05) 0%, transparent 50%),
+      radial-gradient(circle at 85% 85%, rgba(201,168,76,0.04) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 660px;
+    margin: 0 auto;
+    padding: 24px 18px 72px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .header {
+    text-align: center;
+    padding: 36px 0 28px;
+    animation: fadeDown 0.5s ease both;
+  }
+
+  .header-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--verde);
+    color: white;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 5px 14px;
+    border-radius: 100px;
+    margin-bottom: 18px;
+  }
+
+  .header h1 {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: clamp(26px, 6.5vw, 40px);
+    font-weight: 900;
+    color: var(--texto);
+    line-height: 1.15;
+    margin-bottom: 12px;
+  }
+
+  .header h1 em { font-style: normal; color: var(--verde); }
+
+  .header p {
+    font-size: 15px;
+    color: var(--texto-mid);
+    line-height: 1.65;
+    max-width: 400px;
+    margin: 0 auto;
+    font-weight: 300;
+  }
+
+  .card {
+    background: white;
+    border-radius: 20px;
+    padding: 24px;
+    box-shadow: var(--sombra);
+    margin-bottom: 16px;
+    border: 1px solid rgba(27,107,90,0.07);
+    animation: fadeUp 0.5s ease both;
+  }
+
+  .card-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--texto);
+    margin-bottom: 4px;
+  }
+
+  .card-sub {
+    font-size: 12px;
+    color: var(--texto-mid);
+    margin-bottom: 18px;
+    font-weight: 300;
+  }
+
+  .sel-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .sel-grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+
+  .sel-btn {
+    border: 2px solid var(--bg-dark);
+    background: var(--bg);
+    border-radius: 12px;
+    padding: 10px 6px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.18s;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .sel-btn:hover { border-color: var(--verde-light); background: var(--verde-suave); }
+  .sel-btn.active { border-color: var(--verde); background: var(--verde-ultra); box-shadow: 0 2px 12px rgba(27,107,90,0.15); }
+  .sel-btn .s-icon { font-size: 20px; margin-bottom: 4px; display: block; }
+  .sel-btn .s-label { font-size: 11px; font-weight: 600; color: var(--texto); display: block; }
+  .sel-btn .s-desc { font-size: 10px; color: var(--texto-mid); display: block; margin-top: 1px; }
+
+  .sel-btn-h {
+    border: 2px solid var(--bg-dark);
+    background: var(--bg);
+    border-radius: 12px;
+    padding: 12px;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.18s;
+    font-family: 'DM Sans', sans-serif;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .sel-btn-h:hover { border-color: var(--verde-light); background: var(--verde-suave); }
+  .sel-btn-h.active { border-color: var(--verde); background: var(--verde-ultra); box-shadow: 0 2px 12px rgba(27,107,90,0.15); }
+  .sel-btn-h .h-icon { font-size: 18px; flex-shrink: 0; }
+  .sel-btn-h .h-label { font-size: 13px; font-weight: 600; color: var(--texto); display: block; }
+  .sel-btn-h .h-desc { font-size: 11px; color: var(--texto-mid); display: block; }
+
+  .pos-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
+
+  .pos-btn {
+    border: 2px solid var(--bg-dark);
+    background: var(--bg);
+    border-radius: 12px;
+    padding: 10px 6px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.18s;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .pos-btn .p-icon { font-size: 18px; margin-bottom: 3px; display: block; }
+  .pos-btn .p-label { font-size: 11px; font-weight: 600; color: var(--texto); display: block; }
+  .pos-btn .p-desc { font-size: 10px; color: var(--texto-mid); display: block; }
+  .pos-btn[data-pos="competitivo"].active { border-color: #2E7D32; background: #E8F5E9; }
+  .pos-btn[data-pos="balanceado"].active { border-color: var(--verde); background: var(--verde-ultra); }
+  .pos-btn[data-pos="premium"].active { border-color: #6A1B9A; background: #F3E5F5; }
+
+  .form-group { margin-bottom: 16px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--texto);
+    margin-bottom: 6px;
+    letter-spacing: 0.2px;
+  }
+
+  label .hint { font-weight: 300; color: var(--texto-mid); font-size: 11px; }
+
+  .input-wrap { position: relative; width: 100%; }
+  .input-wrap .prefix {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--verde);
+    pointer-events: none;
+  }
+
+  input[type="number"], input[type="text"] {
+    width: 100%;
+    padding: 12px 14px;
+    border: 2px solid var(--bg-dark);
+    border-radius: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    color: var(--texto);
+    background: var(--bg);
+    transition: all 0.18s;
+    outline: none;
+    -moz-appearance: textfield;
+  }
+
+  input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
+  input[type="number"]:focus, input[type="text"]:focus { border-color: var(--verde); background: white; box-shadow: 0 0 0 3px rgba(27,107,90,0.10); }
+  .input-wrap input { padding-left: 34px; }
+
+  .hora-resultado { margin-top: 0; }
+
+  .hora-box {
+    background: var(--verde-ultra);
+    border: 2px solid var(--verde);
+    border-radius: 14px;
+    padding: 16px 18px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 4px;
+  }
+
+  .hora-label { font-size: 11px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--texto-mid); }
+  .hora-valor { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 32px; font-weight: 700; color: var(--verde); line-height: 1.1; }
+  .hora-sub { font-size: 11px; color: var(--texto-mid); font-weight: 300; }
+
+  .dica {
+    margin-top: 10px;
+    padding: 10px 13px;
+    background: var(--verde-ultra);
+    border-radius: 10px;
+    font-size: 12px;
+    color: var(--texto-mid);
+    line-height: 1.5;
+    border-left: 3px solid var(--verde);
+  }
+
+  /* OVERHEAD SELECTOR */
+  .overhead-intro {
+    background: var(--verde-ultra);
+    border-left: 3px solid var(--verde);
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 12px;
+    color: var(--texto-mid);
+    line-height: 1.6;
+    margin-bottom: 16px;
+  }
+  .overhead-intro strong { color: var(--verde); font-weight: 600; }
+  .overhead-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 12px; }
+  .overhead-btn {
+    border: 2px solid var(--bg-dark);
+    background: var(--bg);
+    border-radius: 12px;
+    padding: 14px 14px;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.18s;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .overhead-btn:hover { border-color: var(--verde-light); background: var(--verde-suave); }
+  .overhead-btn.active { border-color: var(--verde); background: var(--verde-ultra); box-shadow: 0 2px 12px rgba(27,107,90,0.15); }
+  .overhead-btn .o-titulo { font-size: 13px; font-weight: 700; color: var(--verde); display: block; margin-bottom: 4px; letter-spacing: 0.5px; }
+  .overhead-btn .o-desc { font-size: 11px; color: var(--texto-mid); display: block; line-height: 1.4; }
+  .overhead-custom { display: none; align-items: center; gap: 10px; margin-top: 8px; }
+  .overhead-custom.show { display: flex; }
+  .overhead-custom label { margin: 0; white-space: nowrap; font-size: 12px; }
+  .overhead-custom input { max-width: 90px; }
+  .overhead-custom .suffix { font-size: 13px; font-weight: 600; color: var(--verde); }
+
+  .vol-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 14px; }
+  .vol-num { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 36px; font-weight: 700; color: var(--verde); line-height: 1; }
+  .vol-unit { font-size: 13px; color: var(--texto-mid); margin-top: 2px; }
+  .vol-mes { text-align: right; }
+  .vol-mes-num { font-size: 20px; font-weight: 700; color: var(--texto); }
+  .vol-mes-label { font-size: 11px; color: var(--texto-mid); }
+
+  input[type="range"] {
+    width: 100%;
+    height: 6px;
+    -webkit-appearance: none;
+    background: linear-gradient(to right, var(--verde) 0%, var(--verde) var(--val, 0%), var(--bg-dark) var(--val, 0%));
+    border-radius: 100px;
+    outline: none;
+    cursor: pointer;
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--verde);
+    border: 3px solid white;
+    box-shadow: 0 2px 8px rgba(27,107,90,0.35);
+    cursor: pointer;
+    transition: transform 0.1s;
+  }
+
+  input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.15); }
+  .vol-labels { display: flex; justify-content: space-between; font-size: 10px; color: var(--texto-mid); margin-top: 8px; }
+
+  .btn-calcular {
+    width: 100%;
+    padding: 17px;
+    background: linear-gradient(135deg, var(--verde), #14503F);
+    color: white;
+    border: none;
+    border-radius: 14px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 17px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 6px 20px rgba(27,107,90,0.35);
+    letter-spacing: 0.3px;
+    margin-top: 6px;
+  }
+
+  .btn-calcular:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(27,107,90,0.45); }
+  .btn-calcular:active { transform: translateY(0); }
+
+  .resultado { display: none; }
+  .resultado.show { display: block; animation: fadeUp 0.45s ease both; }
+
+  .termometro {
+    border-radius: 20px;
+    padding: 28px 24px;
+    text-align: center;
+    margin-bottom: 16px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: var(--sombra-forte);
+  }
+
+  .termometro.lucro-saudavel { background: linear-gradient(135deg, #1B5E20, #2E7D32); color: white; }
+  .termometro.lucro-baixo { background: linear-gradient(135deg, #BF360C, #E64A19); color: white; }
+  .termometro.prejuizo { background: linear-gradient(135deg, #7B1818, #C62828); color: white; }
+
+  .termometro::before {
+    content: '';
+    position: absolute;
+    top: -50px; right: -50px;
+    width: 180px; height: 180px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 50%;
+  }
+
+  .t-icon { font-size: 44px; margin-bottom: 6px; display: block; }
+  .t-tag { font-size: 10px; font-weight: 600; letter-spacing: 2.5px; text-transform: uppercase; opacity: 0.75; margin-bottom: 4px; }
+  .t-titulo { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 24px; font-weight: 900; margin-bottom: 6px; }
+  .t-desc { font-size: 13px; opacity: 0.85; font-weight: 300; line-height: 1.55; }
+
+  .metricas { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+
+  .metrica {
+    background: white;
+    border-radius: 16px;
+    padding: 18px 16px;
+    box-shadow: var(--sombra);
+    border: 1px solid rgba(27,107,90,0.07);
+    text-align: center;
+  }
+
+  .metrica.full { grid-column: 1 / -1; background: var(--verde-ultra); border-color: var(--verde-light); }
+
+  .m-label { font-size: 10px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--texto-mid); margin-bottom: 8px; display: block; }
+  .m-valor { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 26px; font-weight: 700; color: var(--texto); line-height: 1; margin-bottom: 3px; }
+  .metrica.full .m-valor { font-size: 34px; color: var(--verde); }
+  .m-sub { font-size: 11px; color: var(--texto-mid); font-weight: 300; }
+
+  .breakdown {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: var(--sombra);
+    margin-bottom: 16px;
+    border: 1px solid rgba(27,107,90,0.07);
+  }
+
+  .breakdown-title { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 15px; font-weight: 700; margin-bottom: 14px; }
+
+  .bk-row { display: flex; justify-content: space-between; align-items: center; padding: 9px 0; border-bottom: 1px solid var(--bg-dark); font-size: 13px; }
+  .bk-row:last-child { border-bottom: none; }
+  .bk-row.total { font-weight: 700; padding-top: 12px; }
+  .bk-label { color: var(--texto-mid); }
+  .bk-val { font-weight: 600; color: var(--texto); }
+  .bk-row.total .bk-val { color: var(--verde); font-size: 15px; }
+
+  .margem-wrap {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: var(--sombra);
+    margin-bottom: 16px;
+    border: 1px solid rgba(27,107,90,0.07);
+  }
+
+  .margem-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .margem-titulo { font-weight: 600; font-size: 14px; }
+  .margem-pct { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 24px; font-weight: 700; color: var(--verde); }
+
+  .bar-track { height: 10px; background: var(--bg-dark); border-radius: 100px; overflow: hidden; margin-bottom: 8px; }
+  .bar-fill { height: 100%; border-radius: 100px; transition: width 1s cubic-bezier(0.4,0,0.2,1); background: linear-gradient(to right, var(--verde-light), var(--verde)); }
+  .bar-labels { display: flex; justify-content: space-between; font-size: 10px; color: var(--texto-mid); }
+
+  .diagnostico {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: var(--sombra);
+    margin-bottom: 16px;
+    border: 1px solid rgba(27,107,90,0.07);
+  }
+
+  .diag-title { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 15px; font-weight: 700; margin-bottom: 14px; }
+
+  .diag-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--bg-dark); font-size: 13px; }
+  .diag-row:last-of-type { border-bottom: none; }
+  .diag-label { color: var(--texto-mid); }
+  .diag-val { font-weight: 600; }
+  .diag-val.neg { color: var(--vermelho); }
+  .diag-val.pos { color: #2E7D32; }
+  .diag-val.neu { color: var(--texto); }
+
+  .msg-alerta, .msg-ok {
+    display: none;
+    margin-top: 12px;
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.5;
+  }
+
+  .msg-alerta { background: var(--vermelho-light); border-left: 3px solid var(--vermelho); color: var(--vermelho); }
+  .msg-ok { background: #E8F5E9; border-left: 3px solid #2E7D32; color: #1B5E20; }
+  .msg-alerta.show, .msg-ok.show { display: block; }
+
+  .impacto-card {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: var(--sombra);
+    margin-bottom: 16px;
+    border: 1px solid rgba(27,107,90,0.07);
+  }
+
+  .impacto-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 20px;
+  }
+
+  .impacto-item {
+    background: var(--bg);
+    border-radius: 12px;
+    padding: 14px 12px;
+    text-align: center;
+  }
+
+  .impacto-item.destaque {
+    background: var(--verde-ultra);
+    border: 1px solid var(--verde-light);
+    grid-column: 1 / -1;
+  }
+
+  .impacto-label {
+    display: block;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--texto-mid);
+    margin-bottom: 6px;
+  }
+
+  .impacto-valor {
+    display: block;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--texto);
+  }
+
+  .impacto-item.destaque .impacto-valor { font-size: 28px; color: var(--verde); }
+  .impacto-item.destaque .impacto-valor.neg { color: var(--vermelho); }
+  .impacto-item.destaque .impacto-valor.azul { color: #1565C0; }
+  .impacto-valor.neg { color: var(--vermelho); }
+  .impacto-valor.neutro { color: var(--verde); }
+  .impacto-valor.azul { color: #1565C0; }
+  .impacto-valor.pos { color: #2E7D32; }
+
+  .btn-recalcular {
+    width: 100%;
+    padding: 15px;
+    background: transparent;
+    color: var(--verde);
+    border: 2px solid var(--verde);
+    border-radius: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 4px;
+  }
+
+  .btn-recalcular:hover { background: var(--verde); color: white; }
+
+  .footer { text-align: center; padding: 28px 0 0; font-size: 11px; color: var(--texto-mid); opacity: 0.5; }
+
+  .btn-pdf {
+    width: 100%;
+    padding: 15px;
+    background: var(--verde-ultra);
+    color: var(--verde);
+    border: 2px solid var(--verde);
+    border-radius: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 10px;
+  }
+
+  .btn-pdf:hover { background: var(--verde); color: white; }
+  .btn-pdf:disabled { opacity: 0.6; cursor: not-allowed; }
+
+  @media print {
+    @page { size: A4 portrait; margin: 10mm; }
+
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+
+    body { background: white !important; font-size: 11px; }
+    body::before { display: none; }
+    #form { display: none !important; }
+    .btn-pdf, .btn-recalcular, .footer, .nome-simulacao-wrap { display: none !important; }
+    .resultado { display: block !important; }
+
+    /* Header compacto */
+    .header { padding: 8px 0 6px; }
+    .header h1 { font-size: 22px; margin-bottom: 4px; }
+    .header p { font-size: 11px; }
+    .header-badge { font-size: 9px; padding: 3px 10px; margin-bottom: 8px; }
+
+    /* Container sem padding excessivo */
+    .container { padding: 0; max-width: 100%; }
+
+    /* Layout em 2 colunas para economizar espaço */
+    .print-grid {
+      display: grid !important;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    /* Todos os cards menores */
+    .card, .metrica, .breakdown, .margem-wrap, .diagnostico, .impacto-card {
+      box-shadow: none !important;
+      border: 1px solid #E0EDEA !important;
+      margin-bottom: 8px !important;
+      padding: 10px 12px !important;
+      break-inside: avoid;
+    }
+
+    /* Termômetro compacto */
+    .termometro {
+      padding: 14px 16px !important;
+      margin-bottom: 8px !important;
+    }
+    .t-icon { font-size: 28px !important; margin-bottom: 2px !important; }
+    .t-titulo { font-size: 18px !important; margin-bottom: 2px !important; }
+    .t-desc { font-size: 11px !important; }
+    .t-tag { font-size: 9px !important; }
+
+    /* Métricas em linha */
+    .metricas {
+      grid-template-columns: 1fr 1fr 1fr !important;
+      gap: 6px !important;
+      margin-bottom: 8px !important;
+    }
+    .metrica { padding: 10px 8px !important; }
+    .m-valor { font-size: 18px !important; }
+    .metrica.full { grid-column: 1 / -1 !important; }
+    .metrica.full .m-valor { font-size: 22px !important; }
+    .m-label { font-size: 9px !important; margin-bottom: 4px !important; }
+    .m-sub { font-size: 10px !important; }
+
+    /* Breakdown compacto */
+    .breakdown-title { font-size: 13px !important; margin-bottom: 8px !important; }
+    .bk-row { padding: 5px 0 !important; font-size: 11px !important; }
+
+    /* Margem */
+    .margem-titulo { font-size: 12px !important; }
+    .margem-pct { font-size: 18px !important; }
+    .bar-track { height: 7px !important; margin-bottom: 4px !important; }
+    .bar-labels { font-size: 9px !important; }
+
+    /* Diagnóstico */
+    .diag-title { font-size: 13px !important; margin-bottom: 8px !important; }
+    .diag-row { padding: 5px 0 !important; font-size: 11px !important; }
+    .msg-alerta, .msg-ok { padding: 8px 10px !important; font-size: 10px !important; margin-top: 6px !important; }
+
+    /* Impacto compacto */
+    .vol-num { font-size: 24px !important; }
+    .impacto-grid { gap: 6px !important; margin-top: 10px !important; }
+    .impacto-item { padding: 8px !important; }
+    .impacto-label { font-size: 9px !important; margin-bottom: 3px !important; }
+    .impacto-valor { font-size: 16px !important; }
+    .impacto-item.destaque .impacto-valor { font-size: 20px !important; }
+
+    /* Título da simulação */
+    #pdf-titulo { font-size: 16px !important; padding: 8px 0 6px !important; margin-bottom: 8px !important; }
+
+    /* Slider some no PDF */
+    input[type=range], .vol-labels { display: none !important; }
+    .vol-header { margin-bottom: 6px !important; }
+  }
+
+  @keyframes fadeDown { from { opacity: 0; transform: translateY(-16px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+
+  @media (max-width: 460px) {
+    .form-row { grid-template-columns: 1fr; }
+    .card { padding: 20px 16px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <div class="header-badge">Ferramenta Exclusiva</div>
+    <h1>Simulador de<br><em>Lucro por Doce</em></h1>
+    <p>Descubra em segundos se você está lucrando ou tendo prejuízo em cada doce, sem cálculo manual.</p>
+  </div>
+
+  <div id="form">
+
+    <div class="card">
+      <div class="card-title">Qual é o seu perfil?</div>
+      <div class="card-sub">Nos ajuda a entender melhor o seu contexto</div>
+      <div class="sel-grid-3">
+        <button class="sel-btn active" data-perfil="iniciante" onclick="setPerfil(this)">
+          <span class="s-icon">🌱</span>
+          <span class="s-label">Iniciante</span>
+          <span class="s-desc">Começando agora</span>
+        </button>
+        <button class="sel-btn" data-perfil="sobrecarregada" onclick="setPerfil(this)">
+          <span class="s-icon">😮</span>
+          <span class="s-label">Sobrecarregada</span>
+          <span class="s-desc">Muito trabalho, pouco retorno</span>
+        </button>
+        <button class="sel-btn" data-perfil="renda_extra" onclick="setPerfil(this)">
+          <span class="s-icon">💰</span>
+          <span class="s-label">Renda Extra</span>
+          <span class="s-desc">Vende nas horas livres</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Tipo de produto</div>
+      <div class="card-sub">Selecione o tipo do doce que você quer calcular</div>
+      <div class="sel-grid-2">
+        <button class="sel-btn-h active" data-tipo="ovo_simples" onclick="setTipo(this)">
+          <span class="h-icon">🥚</span>
+          <div><span class="h-label">Ovo Simples</span><span class="h-desc">Chocolate puro, sem recheio</span></div>
+        </button>
+        <button class="sel-btn-h" data-tipo="meio_ovo" onclick="setTipo(this)">
+          <span class="h-icon">🍫</span>
+          <div><span class="h-label">Meio Ovo Recheado</span><span class="h-desc">Brigadeiro, mousse, ganache</span></div>
+        </button>
+        <button class="sel-btn-h" data-tipo="ovo_colher" onclick="setTipo(this)">
+          <span class="h-icon">🥄</span>
+          <div><span class="h-label">Ovo de Colher</span><span class="h-desc">Recheio cremoso na casca</span></div>
+        </button>
+        <button class="sel-btn-h" data-tipo="ovo_trufado" onclick="setTipo(this)">
+          <span class="h-icon">✨</span>
+          <div><span class="h-label">Ovo Trufado</span><span class="h-desc">Recheio premium, acabamento fino</span></div>
+        </button>
+        <button class="sel-btn-h" data-tipo="caixa_surpresa" onclick="setTipo(this)">
+          <span class="h-icon">🎁</span>
+          <div><span class="h-label">Caixa Surpresa</span><span class="h-desc">Ovo + docinhos + embalagem especial</span></div>
+        </button>
+        <button class="sel-btn-h" data-tipo="kit_pascoa" onclick="setTipo(this)">
+          <span class="h-icon">🐣</span>
+          <div><span class="h-label">Kit Páscoa</span><span class="h-desc">Combo com varios itens</span></div>
+        </button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Custos diretos do produto</div>
+      <div class="card-sub">Preencha quanto você gasta em cada item <strong style="color:var(--verde)">por unidade produzida</strong></div>
+      <div class="form-group" style="margin-bottom:0">
+        <div class="form-row">
+          <div>
+            <label>Ingredientes <span class="hint">(R$ por unidade)</span></label>
+            <div class="input-wrap">
+              <span class="prefix">R$</span>
+              <input type="text" id="ingredientes" placeholder="0,00" inputmode="numeric" oninput="mascara(this)">
+            </div>
+          </div>
+          <div>
+            <label>Embalagem <span class="hint">(R$ por unidade)</span></label>
+            <div class="input-wrap">
+              <span class="prefix">R$</span>
+              <input type="text" id="embalagem" placeholder="0,00" inputmode="numeric" oninput="mascara(this)">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Quanto vale o seu tempo?</div>
+      <div class="card-sub">Vamos calcular o valor da sua hora de forma simples</div>
+      <div class="form-group">
+        <div class="form-row">
+          <div>
+            <label>Quanto quer ganhar por mês? <span class="hint">(R$)</span></label>
+            <div class="input-wrap">
+              <span class="prefix">R$</span>
+              <input type="text" id="renda_desejada" placeholder="0,00" inputmode="numeric" oninput="mascara(this); calcHora()">
+            </div>
+          </div>
+          <div>
+            <label>Horas de trabalho por dia <span class="hint">(horas)</span></label>
+            <input type="number" id="horas_semana" placeholder="Ex: 6" step="1" min="1" oninput="calcHora()">
+          </div>
+        </div>
+      </div>
+      <div class="hora-resultado" id="hora-resultado" style="display:none">
+        <div class="hora-box">
+          <span class="hora-label">Valor calculado da sua hora</span>
+          <span class="hora-valor" id="hora-valor">R$ 0,00</span>
+          <span class="hora-sub">Baseado em 6 dias de trabalho por semana, durante 4 semanas</span>
+        </div>
+      </div>
+      <div class="form-group" style="margin-bottom:0;margin-top:16px">
+        <label>Tempo de produção por unidade <span class="hint">(minutos)</span></label>
+        <input type="number" id="tempo" placeholder="Ex: 30" step="1" min="0">
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Seu preço atual</div>
+      <div class="card-sub">Quanto você cobra hoje por esse produto? (opcional)</div>
+      <div class="form-group" style="margin-bottom:0">
+        <label>Preço que você cobra hoje <span class="hint">(deixe em branco se ainda não vende)</span></label>
+        <div class="input-wrap">
+          <span class="prefix">R$</span>
+          <input type="text" id="preco_atual" placeholder="0,00" inputmode="numeric" oninput="mascara(this)">
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Custos indiretos</div>
+      <div class="card-sub">Gastos que existem para você produzir, mas não entram diretamente no produto</div>
+      <div class="overhead-intro">
+        <strong>O que são custos indiretos?</strong><br>
+        Energia elétrica, gás, água e desgaste de equipamentos (forno, batedeira, formas...). Você não paga esses custos por doce, mas eles existem e precisam entrar no preço.
+      </div>
+      <div class="overhead-grid">
+        <button class="overhead-btn" data-overhead="5" onclick="setOverhead(this)">
+          <span class="o-titulo">🌱 POUCO</span>
+          <span class="o-desc">Produzo pouco e uso poucos equipamentos</span>
+        </button>
+        <button class="overhead-btn active" data-overhead="10" onclick="setOverhead(this)">
+          <span class="o-titulo">⚙️ MÉDIO</span>
+          <span class="o-desc">Produzo regular e uso razoável os equipamentos</span>
+        </button>
+        <button class="overhead-btn" data-overhead="15" onclick="setOverhead(this)">
+          <span class="o-titulo">🔥 ALTO</span>
+          <span class="o-desc">Produzo vários e uso bastante os equipamentos</span>
+        </button>
+        <button class="overhead-btn" data-overhead="25" onclick="setOverhead(this)">
+          <span class="o-titulo">🚀 MUITO</span>
+          <span class="o-desc">Produzo muito e uso muito mesmo os equipamentos</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Posicionamento de preço</div>
+      <div class="card-sub">Como você quer se posicionar no mercado?</div>
+      <div class="pos-grid">
+        <button class="pos-btn" data-pos="competitivo" onclick="setPos(this)">
+          <span class="p-icon">🟢</span>
+          <span class="p-label">Competitivo</span>
+          <span class="p-desc">Preço acessível, mais vendas</span>
+        </button>
+        <button class="pos-btn active" data-pos="balanceado" onclick="setPos(this)">
+          <span class="p-icon">🟡</span>
+          <span class="p-label">Balanceado</span>
+          <span class="p-desc">Equilíbrio lucro e volume</span>
+        </button>
+        <button class="pos-btn" data-pos="premium" onclick="setPos(this)">
+          <span class="p-icon">🔵</span>
+          <span class="p-label">Premium</span>
+          <span class="p-desc">Preço alto, mais margem</span>
+        </button>
+      </div>
+    </div>
+
+    <button class="btn-calcular" onclick="calcular()">🍫 Descobrir meu lucro agora</button>
+
+  </div>
+
+  <div class="resultado" id="resultado">
+
+    <div id="pdf-titulo" style="display:none;font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:var(--texto);padding:16px 0 8px;border-bottom:2px solid var(--bg-dark);margin-bottom:16px"></div>
+    <div class="termometro" id="termometro">
+      <span class="t-icon" id="t-icon">🟢</span>
+      <div class="t-tag">Diagnóstico</div>
+      <div class="t-titulo" id="t-titulo">Lucro Saudável</div>
+      <div class="t-desc" id="t-desc">Você está no caminho certo!</div>
+    </div>
+
+    <div class="metricas">
+      <div class="metrica full">
+        <span class="m-label">💰 Preço sugerido</span>
+        <div class="m-valor" id="r-preco">R$ 0,00</div>
+        <div class="m-sub">por unidade</div>
+      </div>
+      <div class="metrica">
+        <span class="m-label">📦 Custo total</span>
+        <div class="m-valor" id="r-custo">R$ 0,00</div>
+        <div class="m-sub">por unidade</div>
+      </div>
+      <div class="metrica">
+        <span class="m-label">💵 Lucro líquido</span>
+        <div class="m-valor" id="r-lucro">R$ 0,00</div>
+        <div class="m-sub">por unidade</div>
+      </div>
+    </div>
+
+    <div class="breakdown">
+      <div class="breakdown-title">📋 Detalhamento dos custos</div>
+      <div class="bk-row">
+        <span class="bk-label">Ingredientes</span>
+        <span class="bk-val" id="bk-ing">—</span>
+      </div>
+      <div class="bk-row">
+        <span class="bk-label">Embalagem</span>
+        <span class="bk-val" id="bk-emb">—</span>
+      </div>
+      <div class="bk-row">
+        <span class="bk-label">Mão de obra</span>
+        <span class="bk-val" id="bk-mao">—</span>
+      </div>
+      <div class="bk-row">
+        <span class="bk-label">Custos indiretos (energia, gás, desgaste)</span>
+        <span class="bk-val" id="bk-over">—</span>
+      </div>
+      <div class="bk-row total">
+        <span class="bk-label">Custo total por unidade</span>
+        <span class="bk-val" id="bk-total">—</span>
+      </div>
+    </div>
+
+    <div class="margem-wrap">
+      <div class="margem-header">
+        <span class="margem-titulo">Margem de lucro</span>
+        <span class="margem-pct" id="r-margem">0%</span>
+      </div>
+      <div class="bar-track">
+        <div class="bar-fill" id="bar-fill" style="width:0%"></div>
+      </div>
+      <div class="bar-labels">
+        <span>0% prejuízo</span>
+        <span>30% ideal</span>
+        <span>60%+ premium</span>
+      </div>
+    </div>
+
+    <div class="diagnostico">
+      <div class="diag-title">🔍 Diagnóstico de Prejuizo Invisivel</div>
+      <div class="diag-row">
+        <span class="diag-label">Preço que você cobra hoje</span>
+        <span class="diag-val neu" id="d-atual">—</span>
+      </div>
+      <div class="diag-row">
+        <span class="diag-label">Preço que você poderia cobrar</span>
+        <span class="diag-val pos" id="d-deveria">—</span>
+      </div>
+      <div class="diag-row">
+        <span class="diag-label">Diferença por unidade</span>
+        <span class="diag-val" id="d-diff">—</span>
+      </div>
+      <div class="msg-alerta" id="msg-alerta">
+        Atenção! Você pode estar perdendo dinheiro em cada venda sem perceber. Esse valor sai do seu bolso todo mês.
+      </div>
+      <div class="msg-ok" id="msg-ok">
+        Ótimo! Você já cobra acima do preço sugerido. Continue assim e foque em aumentar o volume de vendas!
+      </div>
+    </div>
+
+    <div class="impacto-card">
+      <div class="diag-title">📈 Impacto no seu bolso por mês</div>
+      <div style="font-size:12px;color:var(--texto-mid);margin-bottom:6px;font-weight:300">Cálculo baseado no <strong style="color:var(--verde)">preço sugerido de <span id="imp-preco-ref">R$ 0,00</span> por unidade</strong></div>
+      <div style="font-size:12px;color:var(--texto-mid);margin-bottom:18px;font-weight:300">Ajuste o volume abaixo e veja o impacto no mês</div>
+      <div class="vol-header">
+        <div>
+          <div class="vol-num" id="vol-num">1</div>
+          <div class="vol-unit">unidades / semana</div>
+        </div>
+        <div class="vol-mes">
+          <div class="vol-mes-num" id="vol-mes">~4</div>
+          <div class="vol-mes-label">por mês</div>
+        </div>
+      </div>
+      <input type="range" id="volume" min="1" max="500" value="1" step="1" oninput="updateVol(this); atualizarImpacto()">
+      <div class="vol-labels"><span>1 un</span><span>250 un</span><span>500 un</span></div>
+      <div class="impacto-grid">
+        <div class="impacto-item">
+          <span class="impacto-label">Faturamento mensal</span>
+          <span class="impacto-valor" id="imp-faturamento">—</span>
+        </div>
+        <div class="impacto-item">
+          <span class="impacto-label">Custo total mensal</span>
+          <span class="impacto-valor" id="imp-custo">—</span>
+        </div>
+        <div class="impacto-item destaque">
+          <span class="impacto-label">Lucro líquido mensal</span>
+          <span class="impacto-valor" id="imp-lucro">—</span>
+        </div>
+        <div class="impacto-item destaque" id="imp-diff-wrap" style="display:none">
+          <span class="impacto-label" id="imp-diff-label">Se cobrar o preço sugerido, você ganha a mais por mês</span>
+          <span class="impacto-valor" id="imp-diff">—</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="nome-simulacao-wrap" id="nome-simulacao-wrap">
+      <label style="font-size:12px;font-weight:600;color:var(--texto);display:block;margin-bottom:6px">Nome desta simulação <span style="font-weight:300;color:var(--texto-mid);font-size:11px">(opcional — aparece no PDF)</span></label>
+      <input type="text" id="nome-simulacao" placeholder="Ex: Ovo de páscoa de limão" style="width:100%;padding:12px 14px;border:2px solid var(--bg-dark);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--texto);background:var(--bg);outline:none;transition:all 0.18s;margin-bottom:12px">
+    </div>
+    <button class="btn-pdf" id="btn-pdf" onclick="exportarPDF()">📄 Exportar simulação em PDF</button>
+    <button class="btn-recalcular" onclick="recalcular()">↩ Fazer novo cálculo</button>
+  </div>
+
+  <div class="footer">Simulador de Lucro por Doce &bull; Todos os direitos reservados</div>
+
+</div>
+
+<script>
+  // Mascara monetaria
+  function mascara(input) {
+    let v = input.value.replace(/[^0-9]/g, '');
+    v = (parseInt(v) || 0).toString();
+    while (v.length < 3) v = '0' + v;
+    let cents = v.slice(-2);
+    let reais = v.slice(0, -2);
+    reais = reais.replace(/^0+([1-9])/, '$1').replace(/^0+$/, '0');
+    let partes = [];
+    while (reais.length > 3) {
+      partes.unshift(reais.slice(-3));
+      reais = reais.slice(0, -3);
+    }
+    partes.unshift(reais);
+    input.value = partes.join('.') + ',' + cents;
+  }
+
+  function parseMoney(val) {
+    if (!val) return 0;
+    return parseFloat(val.replace('.', '').replace(',', '.')) || 0;
+  }
+
+  // Exportar PDF
+  function exportarPDF() {
+    const nome = document.getElementById('nome-simulacao').value.trim();
+    const titulo = document.getElementById('pdf-titulo');
+    if (nome) {
+      titulo.textContent = nome;
+      titulo.style.display = 'block';
+    } else {
+      titulo.style.display = 'none';
+    }
+    const btn = document.getElementById('btn-pdf');
+    btn.textContent = 'Gerando PDF...';
+    btn.disabled = true;
+    setTimeout(() => {
+      window.print();
+      btn.textContent = '📄 Exportar simulação em PDF';
+      btn.disabled = false;
+    }, 300);
+  }
+
+  let perfil = 'iniciante';
+  let tipo = 'simples';
+  let pos = 'balanceado';
+  let _precoSugerido = 0;
+  let _custoTotal = 0;
+  let _precoAtual = 0;
+
+  function setPerfil(btn) {
+    document.querySelectorAll('[data-perfil]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    perfil = btn.dataset.perfil;
+  }
+
+  function setTipo(btn) {
+    document.querySelectorAll('[data-tipo]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    tipo = btn.dataset.tipo;
+  }
+
+  function setPos(btn) {
+    document.querySelectorAll('[data-pos]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    pos = btn.dataset.pos;
+  }
+
+  function updateVol(input) {
+    const v = parseInt(input.value);
+    document.getElementById('vol-num').textContent = v;
+    document.getElementById('vol-mes').textContent = '~' + (v * 4);
+    const pct = ((v - 1) / (500 - 1)) * 100;
+    input.style.setProperty('--val', pct + '%');
+  }
+
+  function fmt(n) {
+    return 'R$ ' + n.toFixed(2).replace('.', ',').replace(/(\d)(?=(\d{3})+,)/g, '$1.');
+  }
+
+  let overheadPct = 0.10;
+
+  function setOverhead(btn) {
+    document.querySelectorAll('[data-overhead]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const val = btn.dataset.overhead;
+    overheadPct = parseFloat(val) / 100;
+  }
+
+  document.addEventListener('input', function(e) {
+    if (e.target.id === 'overhead-valor') {
+      overheadPct = (parseFloat(e.target.value) || 0) / 100;
+    }
+  });
+
+  function calcHora() {
+    const renda = parseMoney(document.getElementById('renda_desejada').value);
+    const horas = parseFloat(document.getElementById('horas_semana').value) || 0;
+    const box = document.getElementById('hora-resultado');
+    if (renda > 0 && horas > 0) {
+      const horasMes = horas * 6 * 4;
+      const valorHora = renda / horasMes;
+      document.getElementById('hora-valor').textContent = 'R$ ' + valorHora.toFixed(2).replace('.', ',');
+      box.style.display = 'block';
+    } else {
+      box.style.display = 'none';
+    }
+  }
+
+  function getValorHora() {
+    const renda = parseMoney(document.getElementById('renda_desejada').value);
+    const horas = parseFloat(document.getElementById('horas_semana').value) || 0;
+    if (renda > 0 && horas > 0) {
+      return renda / (horas * 6 * 4); // 6 dias por semana x 4 semanas
+    }
+    return 0;
+  }
+
+  function getMargem() {
+    if (pos === 'competitivo') return 0.35;
+    if (pos === 'balanceado') return 0.50;
+    if (pos === 'premium') return 0.65;
+    return 0.50;
+  }
+
+  function getAjusteTipo() {
+    return 0; // Tipo de produto e apenas ilustrativo, nao influencia o calculo
+  }
+
+  function calcular() {
+    const ing = parseMoney(document.getElementById('ingredientes').value);
+    const emb = parseMoney(document.getElementById('embalagem').value);
+    const tempo = parseFloat(document.getElementById('tempo').value) || 0;
+    const valorHora = getValorHora();
+    const precoAtual = parseMoney(document.getElementById('preco_atual').value);
+    // Volume e inicializado depois, no bloco de impacto mensal
+
+    if (ing === 0 && emb === 0) {
+      alert('Preencha pelo menos o custo dos ingredientes!');
+      return;
+    }
+
+    // Mão de obra: (tempo em horas) x valor hora
+    const maoDeObra = (tempo / 60) * valorHora;
+
+    // Custo base: ingredientes + embalagem
+    const custoBase = ing + emb;
+
+    // Overhead fixo: 10% sobre custo base (energia, gas, desgaste)
+    const overhead = custoBase * overheadPct;
+
+    // Custo total real
+    const custoTotal = custoBase + maoDeObra + overhead;
+
+    // Margem desejada = posicionamento + ajuste tipo
+    const margemDesejada = getMargem() + getAjusteTipo();
+
+    // Preço sugerido pela formula correta: custo / (1 - margem)
+    // Garante que a margem seja calculada sobre o preco de venda, nao sobre o custo
+    const precoSugerido = custoTotal / (1 - margemDesejada);
+
+    // Lucro real por unidade
+    const lucroUnidade = precoSugerido - custoTotal;
+
+    // Margem real %
+    const margemReal = (lucroUnidade / precoSugerido) * 100;
+
+    // Status: usa preco atual se informado, senao usa sugerido
+    const precoParaDiagnostico = precoAtual > 0 ? precoAtual : precoSugerido;
+    const lucroReal = precoParaDiagnostico - custoTotal;
+    const margemDiagnostico = (lucroReal / precoParaDiagnostico) * 100;
+
+    let statusClass, icon, titulo, desc;
+    if (precoAtual > 0) {
+      // Diagnostico baseado no preco que ela pratica hoje
+      if (lucroReal < 0) {
+        statusClass = 'prejuizo';
+        icon = '🔴';
+        titulo = 'Atenção: Você está no prejuízo!';
+        desc = 'Com o preço que você cobra hoje, você não cobre nem os seus custos. Cada venda gera perda.';
+      } else if (margemDiagnostico < 20) {
+        statusClass = 'lucro-baixo';
+        icon = '🟡';
+        titulo = 'Lucro muito baixo';
+        desc = 'Você cobre os custos, mas a margem é muito pequena. Qualquer imprevisto vira prejuízo.';
+      } else if (margemDiagnostico < 35) {
+        statusClass = 'lucro-baixo';
+        icon = '🟡';
+        titulo = 'Lucro Baixo';
+        desc = 'Você lucra, mas dá pra melhorar. Um pequeno ajuste no preço faz grande diferença.';
+      } else {
+        statusClass = 'lucro-saudavel';
+        icon = '🟢';
+        titulo = 'Lucro Saudável!';
+        desc = 'Seu preço atual já cobre os custos com uma boa margem. Continue assim!';
+      }
+    } else {
+      // Sem preco atual: diagnostico sobre o preco sugerido (sempre saudavel)
+      statusClass = 'lucro-saudavel';
+      icon = '🟢';
+      titulo = 'Preço sugerido calculado!';
+      desc = 'Use o preço sugerido abaixo como referência para cobrar com lucro garantido.';
+    }
+
+    document.getElementById('termometro').className = 'termometro ' + statusClass;
+    document.getElementById('t-icon').textContent = icon;
+    document.getElementById('t-titulo').textContent = titulo;
+    document.getElementById('t-desc').textContent = desc;
+
+    document.getElementById('r-preco').textContent = fmt(precoSugerido);
+    document.getElementById('r-custo').textContent = fmt(custoTotal);
+    document.getElementById('r-lucro').textContent = fmt(lucroUnidade);
+    document.getElementById('r-margem').textContent = margemReal.toFixed(0) + '%';
+
+    document.getElementById('bk-ing').textContent = fmt(ing);
+    document.getElementById('bk-emb').textContent = fmt(emb);
+    document.getElementById('bk-mao').textContent = maoDeObra > 0 ? fmt(maoDeObra) : 'Não informado';
+    document.getElementById('bk-over').textContent = fmt(overhead);
+    document.getElementById('bk-total').textContent = fmt(custoTotal);
+
+    setTimeout(() => {
+      // Escala visual: 0% a 60% representa 0% a 100% da barra
+      const barWidth = Math.min((margemReal / 60) * 100, 100);
+      document.getElementById('bar-fill').style.width = barWidth + '%';
+    }, 100);
+
+    if (precoAtual > 0) {
+      const diff = precoSugerido - precoAtual;
+      document.getElementById('d-atual').textContent = fmt(precoAtual);
+      document.getElementById('d-deveria').textContent = fmt(precoSugerido);
+      const dEl = document.getElementById('d-diff');
+      // diff = precoSugerido - precoAtual
+      // Se diff > 0: ela cobra menos que o sugerido = ALERTA
+      // Se diff < 0: ela cobra mais que o sugerido = OTIMO
+      if (diff > 0) {
+        dEl.textContent = '- ' + fmt(Math.abs(diff)) + ' / unidade';
+        dEl.className = 'diag-val neg';
+        document.getElementById('msg-alerta').classList.add('show');
+        document.getElementById('msg-ok').classList.remove('show');
+      } else {
+        dEl.textContent = '+ ' + fmt(Math.abs(diff)) + ' / unidade';
+        dEl.className = 'diag-val pos';
+        document.getElementById('msg-alerta').classList.remove('show');
+        document.getElementById('msg-ok').classList.add('show');
+      }
+    } else {
+      document.getElementById('d-atual').textContent = 'Não informado';
+      document.getElementById('d-deveria').textContent = fmt(precoSugerido);
+      document.getElementById('d-diff').textContent = '—';
+      document.getElementById('d-diff').className = 'diag-val neu';
+    }
+
+    // Salvar para uso no impacto mensal
+    _precoSugerido = precoSugerido;
+    _custoTotal = custoTotal;
+    _precoAtual = precoAtual;
+
+    document.getElementById('form').style.display = 'none';
+    document.getElementById('resultado').classList.add('show');
+
+    // Agora o slider existe no DOM, pode inicializar
+    const sl = document.getElementById('volume');
+    if (sl) { sl.value = 1; updateVol(sl); }
+    atualizarImpacto();
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function recalcular() {
+    // Zerar todos os campos com null check
+    ['ingredientes','embalagem','tempo','valor_hora','renda_desejada','horas_semana','preco_atual'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = '';
+    });
+    const horaRes = document.getElementById('hora-resultado');
+    if (horaRes) horaRes.style.display = 'none';
+
+    // Resetar selecoes para padrao
+    document.querySelectorAll('[data-perfil]').forEach(b => b.classList.remove('active'));
+    document.querySelector('[data-perfil="iniciante"]').classList.add('active');
+    perfil = 'iniciante';
+
+    document.querySelectorAll('[data-tipo]').forEach(b => b.classList.remove('active'));
+    document.querySelector('[data-tipo="ovo_simples"]').classList.add('active');
+    tipo = 'ovo_simples';
+
+    document.querySelectorAll('[data-pos]').forEach(b => b.classList.remove('active'));
+    document.querySelector('[data-pos="balanceado"]').classList.add('active');
+    pos = 'balanceado';
+
+    document.querySelectorAll('[data-overhead]').forEach(b => b.classList.remove('active'));
+    document.querySelector('[data-overhead="10"]').classList.add('active');
+    overheadPct = 0.10;
+    document.getElementById('overhead-custom').classList.remove('show');
+
+    // Resetar resultado
+    document.getElementById('resultado').classList.remove('show');
+    document.getElementById('form').style.display = 'block';
+    document.getElementById('bar-fill').style.width = '0%';
+    document.getElementById('msg-alerta').classList.remove('show');
+    document.getElementById('msg-ok').classList.remove('show');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function atualizarImpacto() {
+    const volume = parseInt(document.getElementById('volume').value) || 1;
+    const volMensal = volume * 4;
+    const faturamento = _precoSugerido * volMensal;
+    const custoMensal = _custoTotal * volMensal;
+    const lucroMensal = faturamento - custoMensal;
+
+    // Mostrar preco de referencia
+    document.getElementById('imp-preco-ref').textContent = fmt(_precoSugerido);
+
+    document.getElementById('imp-faturamento').textContent = fmt(faturamento);
+    document.getElementById('imp-custo').textContent = fmt(custoMensal);
+    document.getElementById('imp-lucro').textContent = fmt(lucroMensal);
+    document.getElementById('imp-lucro').className = 'impacto-valor' + (lucroMensal >= 0 ? ' pos' : ' neg');
+
+    if (_precoAtual > 0) {
+      const diffMensal = (_precoSugerido - _precoAtual) * volMensal;
+      const impEl = document.getElementById('imp-diff');
+      const labelEl = document.getElementById('imp-diff-label');
+      if (diffMensal > 0) {
+        // cobra menos que sugerido = deixando dinheiro na mesa
+        labelEl.textContent = 'Você está deixando na mesa por mês (cobrando menos que o sugerido)';
+        impEl.textContent = '- ' + fmt(Math.abs(diffMensal));
+        impEl.className = 'impacto-valor neg';
+      } else if (diffMensal === 0) {
+        // cobra exatamente o sugerido
+        labelEl.textContent = 'Você cobra exatamente o preço sugerido. Perfeito!';
+        impEl.textContent = 'Empatado';
+        impEl.className = 'impacto-valor neutro';
+      } else {
+        // cobra mais que sugerido = lucro extra
+        labelEl.textContent = 'Você ganha a mais por mês (cobrando acima do sugerido)';
+        impEl.textContent = '+ ' + fmt(Math.abs(diffMensal));
+        impEl.className = 'impacto-valor azul';
+      }
+      document.getElementById('imp-diff-wrap').style.display = '';
+    } else {
+      document.getElementById('imp-diff-wrap').style.display = 'none';
+    }
+  }
+
+  // Slider de volume agora fica no resultado, inicializado no calcular()
+</script>
+</body>
+</html>
